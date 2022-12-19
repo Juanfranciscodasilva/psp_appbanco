@@ -250,14 +250,17 @@ public class VRegistrarUsuario extends javax.swing.JFrame {
         errorEmail.setVisible(false);
         errorEdad.setVisible(false);
         
-//        if(ValidarDatos()){
+        if(ValidarDatos()){
             try{
-//                Usuario u = construirUsuario();
-Usuario u =new Usuario();
-u.setNuevo(true);
+                Usuario u = construirUsuario();
+//Usuario u =new Usuario();
+//u.setNuevo(true);
                 Response respuesta = Main.registrarUsuario(u);
                 if(respuesta.isCorrecto()){
-                    JOptionPane.showMessageDialog(this, "Usted se ha registrado");
+                    String cuentaBancaria = respuesta.getMensajeCorrecto();
+                    JOptionPane.showMessageDialog(this, "Usted se ha registrado\n\nSu número de cuenta bancaria es: "+cuentaBancaria+"\n\n"
+                            + "Es importante que guarde y mantenga su número de cuenta para poder realizar transacciones, por motivos de seguridad "
+                            + "se le pedirá el número de cuenta antes de cualquier transacción en su cuenta");
                     Main.abrirLogin();
                 }else{
                     JOptionPane.showMessageDialog(this, respuesta.getMensajeError(), "", JOptionPane.ERROR_MESSAGE);
@@ -267,7 +270,7 @@ u.setNuevo(true);
                 System.out.println(e.getMessage());
                 JOptionPane.showMessageDialog(this, "Ha ocurrido un error al registrar el usuario", "", JOptionPane.ERROR_MESSAGE);
             }
-//        }
+        }
     }//GEN-LAST:event_RegistrarActionPerformed
 
     public static void main(String args[]) {

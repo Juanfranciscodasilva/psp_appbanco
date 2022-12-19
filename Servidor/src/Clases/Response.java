@@ -8,10 +8,13 @@ public class Response implements Serializable{
 
     public String mensajeError;
 
+    public String mensajeCorrecto;
+
 
     public Response(){
         this.correcto = true;
         this.mensajeError = "";
+        this.mensajeCorrecto = "";
     }
 
     public boolean isCorrecto() {
@@ -30,5 +33,11 @@ public class Response implements Serializable{
         this.mensajeError = mensajeError;
     }
 
+    public String getMensajeCorrecto() {
+        return mensajeCorrecto;
+    }
 
+    public void setMensajeCorrecto(String mensajeCorrecto) {
+        this.mensajeCorrecto = mensajeCorrecto;
+    }
 }

@@ -7,6 +7,8 @@ public class Response implements Serializable{
     public boolean correcto;
 
     public String mensajeError;
+    
+    public String mensajeCorrecto;
 
     
     public Response(){
@@ -28,6 +30,14 @@ public class Response implements Serializable{
 
     public void setMensajeError(String mensajeError) {
         this.mensajeError = mensajeError;
+    }
+
+    public String getMensajeCorrecto() {
+        return mensajeCorrecto;
+    }
+
+    public void setMensajeCorrecto(String mensajeCorrecto) {
+        this.mensajeCorrecto = mensajeCorrecto;
     }
     
     

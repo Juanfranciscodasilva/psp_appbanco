@@ -1,5 +1,6 @@
 package servidor;
 
+import Clases.CuentaBancaria;
 import Clases.Hilo;
 import Clases.Usuario;
 
@@ -15,6 +16,7 @@ public class Main {
 
     //Lista usuarios registrados
     public static List<Usuario> usuarios = new ArrayList<>();
+    public static List<CuentaBancaria> cuentasBancarias = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
         ServerSocket serverSocket = new ServerSocket(PORT);
@@ -22,7 +24,7 @@ public class Main {
 
         while (true) {
             socket = serverSocket.accept();
-            Hilo hilo = new Hilo(socket,usuarios);
+            Hilo hilo = new Hilo(socket,usuarios,cuentasBancarias);
             hilo.start();
         }
     }

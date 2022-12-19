@@ -2,6 +2,7 @@ package cliente;
 
 import Ventanas.*;
 import Clases.*;
+import Utils.AccionUtil;
 import Utils.FirmaUtil;
 import Utils.UsuarioUtil;
 import java.io.ByteArrayInputStream;
@@ -35,6 +36,7 @@ public class Main {
     public static VCargando vCargando;
     public static VIniciarSesion vIniciarSesion;
     public static VRegistrarUsuario vRegistrarUsuario;
+    public static VSeleccionAccion vSeleccionAccion;
     
     private static SecretKey clavePublicaServer = null;
 
@@ -116,6 +118,46 @@ public class Main {
         }
         vRegistrarUsuario = new VRegistrarUsuario();
         vRegistrarUsuario.setVisible(true);
+    }
+    
+    public static void abrirBanco(){
+        if(vIniciarSesion != null){
+            vIniciarSesion.setVisible(false);
+            vIniciarSesion.dispose();
+        }
+        vSeleccionAccion = new VSeleccionAccion();
+        vSeleccionAccion.setVisible(true);
+    }
+    
+    public static Response solicitarSaldo(String cuenta){
+        try{
+            Accion accion = Accion.accionSaldo(cuenta);
+            byte[] accionCifrada = AccionUtil.cifrarAccion(cifrador, accion);
+            flujoOutput.writeObject(accionCifrada);
+            return recibirRespuesta();
+        }catch(Exception ex){
+            System.out.println("Ha habido un error al solicitar el saldo");
+            System.out.println(ex.getMessage());
+            Response respuesta = new Response();
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Ha habido un error al solicitar el saldo");
+            return respuesta;
+        }
+    }
+    
+    public static Response iniciarSesion(Usuario usu){
+        try{
+            byte[] usuarioCifrado = UsuarioUtil.cifrarUsuario(cifrador, usu);
+            flujoOutput.writeObject(usuarioCifrado);
+            return recibirRespuesta();
+        }catch(Exception ex){
+            System.out.println("Ha habido un error al iniciar sesión");
+            System.out.println(ex.getMessage());
+            Response respuesta = new Response();
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Ha habido un error al iniciar sesión");
+            return respuesta;
+        }
     }
     
     public static Response registrarUsuario(Usuario u){

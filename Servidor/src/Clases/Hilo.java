@@ -10,7 +10,10 @@ import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.net.Socket;
 import java.security.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -23,22 +26,30 @@ public class Hilo extends Thread {
     Socket cliente;
 
     List<Usuario> ListaUsuarios;
+    List<CuentaBancaria> ListaCuentasBancarias;
 
     //Flujo
-    public static ObjectInputStream flujoInput = null;
-    public static ObjectOutputStream flujoOutput = null;
+    public ObjectInputStream flujoInput = null;
+    public ObjectOutputStream flujoOutput = null;
 
-    private static SecretKey clavePublicaServer = null;
-    private static SecretKey clavePublicaClient = null;
+    private SecretKey clavePublicaServer = null;
+    private SecretKey clavePublicaClient = null;
+
+    //Usuario iniciado sesion
+    Usuario usuarioSesion;
 
     //Descifrador
-    public static Cipher desCipher = null;
-//Cifrador
-    public static Cipher cifrador = null;
+    public Cipher desCipher = null;
+    //Cifrador
+    public Cipher cifrador = null;
+
+    //Parametros de creacion
+    public final int LONGITUD_CUENTA_BANCARIA = 12;
     
-    public Hilo(Socket cliente,List<Usuario> usuarios){
+    public Hilo(Socket cliente,List<Usuario> usuarios,List<CuentaBancaria> cuentasBancarias){
         this.cliente = cliente;
         this.ListaUsuarios = usuarios;
+        this.ListaCuentasBancarias = cuentasBancarias;
     }
     
     @Override
@@ -89,6 +100,8 @@ public class Hilo extends Thread {
 
             recibirUsuario();
 
+            esperarAcciones();
+
             // cierra los paquetes de datos, el socket y el servidor
             flujoInput.close();
             flujoOutput.close();
@@ -101,6 +114,87 @@ public class Hilo extends Thread {
             System.out.println("Ha ocurrido un error inesperado.");
             System.out.println(ex.getMessage());
         }
+    }
+
+    private void esperarAcciones() throws Exception{
+        try{
+            byte[] accionRecibida = new byte[]{};
+            Accion accion = null;
+            do{
+                try {
+                    accionRecibida = (byte[]) flujoInput.readObject();
+                } catch (ClassNotFoundException ex) {
+                    System.out.println(ex.getMessage());
+                }
+                byte[] accionRecibidaDescifrada = desCipher.doFinal(accionRecibida);
+                ByteArrayInputStream byteInput = new ByteArrayInputStream(accionRecibidaDescifrada);
+                ObjectInputStream objectInput = new ObjectInputStream(byteInput);
+                accion = (Accion)objectInput.readObject();
+                Response respuesta = new Response();
+                if(accion.getAccion().equalsIgnoreCase("saldo")){
+                    respuesta = realizarAccionSaldo(accion);
+                }else if (accion.getAccion().equalsIgnoreCase("transferencia")) {
+                    respuesta = realizarAccionTransferencia(accion);
+                }else if (accion.getAccion().equalsIgnoreCase("retirar")) {
+                    respuesta = realizarAccionRetirar(accion);
+                }else if (accion.getAccion().equalsIgnoreCase("ingresar")) {
+                    respuesta = realizarAccionIngresar(accion);
+                }
+                enviarRespuesta(respuesta);
+            }while(accion != null && accion.getAccion().equalsIgnoreCase("salir"));
+        }catch(Exception ex){
+            System.out.println(ex.getMessage());
+            Response respuesta = new Response();
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Ha ocurrido un error inesperado al realizar una acción de la cuenta");
+            enviarRespuesta(respuesta);
+        }
+    }
+
+    private CuentaBancaria comprobarCuentaDelUsuario(String cuenta) throws Exception{
+        try{
+            CuentaBancaria cuentaEncontrada = this.ListaCuentasBancarias.stream().filter(c -> c.getNumeroCuenta().equalsIgnoreCase(cuenta))
+                    .findFirst().orElse(null);
+            if(cuentaEncontrada == null){
+                return null;
+            }
+            if(!cuentaEncontrada.getDniPropietario().equalsIgnoreCase(this.usuarioSesion.getDni())){
+                return null;
+            }
+            return cuentaEncontrada;
+        }catch (Exception ex){
+            throw ex;
+        }
+    }
+
+    private Response realizarAccionSaldo(Accion accion){
+        Response respuesta = new Response();
+        try{
+            CuentaBancaria cta = comprobarCuentaDelUsuario(accion.getCuentaBancaria());
+            if(cta == null){
+                respuesta.setCorrecto(false);
+                respuesta.setMensajeError("La cuenta con número: '"+accion.getCuentaBancaria()+"' no es la correspondiente a su persona, por favor indique su número de cuenta.");
+                return respuesta;
+            }
+            respuesta.setMensajeCorrecto(String.valueOf(cta.getSaldo()));
+            return respuesta;
+        }catch (Exception ex){
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Ha ocurrido un error al solicitar el saldo");
+            return respuesta;
+        }
+    }
+
+    private Response realizarAccionTransferencia(Accion accion){
+        return new Response();
+    }
+
+    private Response realizarAccionRetirar(Accion accion){
+        return new Response();
+    }
+
+    private Response realizarAccionIngresar(Accion accion){
+        return new Response();
     }
 
     private void recibirUsuario() throws Exception{
@@ -120,16 +214,77 @@ public class Hilo extends Thread {
                 Response respuesta = new Response();
                 if(usuario.isNuevo()){
                     firmarCertificado(flujoOutput);
-                    //TODO registrar el usuario en la lista
+                    respuesta = crearUsuario(usuario);
                 }else{
-                    //TODO buscar el usuario y ver si hace login
+                    respuesta = comprobarInicio(usuario);
                 }
                 enviarRespuesta(respuesta);
             }while(usuario != null && usuario.isNuevo());
         }catch(Exception ex){
             System.out.println(ex.getMessage());
-            throw ex;
+            Response respuesta = new Response();
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Ha ocurrido un error inesperado");
+            enviarRespuesta(respuesta);
         }
+    }
+
+    private Response comprobarInicio(Usuario usu){
+        Response respuesta = new Response();
+        Usuario encontrado = this.ListaUsuarios.stream()
+                .filter(u -> u.getDni().equalsIgnoreCase(usu.getDni()) && u.getPassword().equals(usu.getPassword()))
+                .findFirst()
+                .orElse(null);
+        if(encontrado == null){
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Las credenciales no corresponden a ningún usuario.");
+        }else{
+            usuarioSesion = encontrado;
+        }
+        return respuesta;
+    }
+
+    private Response crearUsuario(Usuario usu) throws Exception{
+        Response respuesta = new Response();
+        if(!existeUsuario(usu.getDni())){
+            usu.setNuevo(false);
+            ListaUsuarios.add(usu);
+            CuentaBancaria cuenta = new CuentaBancaria();
+            String numeroCuenta = generarNumeroCuentaBancaria();
+            cuenta.setNumeroCuenta(numeroCuenta);
+            cuenta.setSaldo(0);
+            cuenta.setDniPropietario(usu.getDni());
+            this.ListaCuentasBancarias.add(cuenta);
+            respuesta.setMensajeCorrecto(numeroCuenta);
+        }else{
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("El usuario con DNI: "+usu.getDni().toUpperCase()+" ya está registrado");
+        }
+        return new Response();
+    }
+
+    private String generarNumeroCuentaBancaria(){
+        String cuenta = "";
+        do{
+            Random random = new Random();
+            char[] digits = new char[LONGITUD_CUENTA_BANCARIA];
+            digits[0] = (char) (random.nextInt(9) + '1');
+            for (int i = 1; i < LONGITUD_CUENTA_BANCARIA; i++) {
+                digits[i] = (char) (random.nextInt(10) + '0');
+            }
+            cuenta = new String(digits);
+        }while(existeCuenta(cuenta));
+        return cuenta;
+    }
+
+    private boolean existeUsuario(String dni){
+        return ListaUsuarios.stream().filter(u -> u.getDni().equalsIgnoreCase(dni))
+                .findFirst().orElse(null) != null;
+    }
+
+    private boolean existeCuenta(String cuenta){
+        return ListaCuentasBancarias.stream().filter(c -> c.getNumeroCuenta().equals(cuenta))
+                .findFirst().orElse(null) != null;
     }
 
     private void enviarRespuesta(Response respuesta) throws Exception{

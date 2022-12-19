@@ -1,7 +1,10 @@
 package Ventanas;
 
+import Clases.Response;
 import Clases.Usuario;
+import Utils.EncriptacionUtil;
 import cliente.Main;
+import javax.swing.JOptionPane;
 
 public class VIniciarSesion extends javax.swing.JFrame {
 
@@ -16,7 +19,7 @@ public class VIniciarSesion extends javax.swing.JFrame {
     private void initComponents() {
 
         eUsuario = new javax.swing.JLabel();
-        tUsuario = new javax.swing.JTextField();
+        tDni = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         incorrectUser = new javax.swing.JLabel();
         Acceder = new javax.swing.JButton();
@@ -28,16 +31,16 @@ public class VIniciarSesion extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         eUsuario.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
-        eUsuario.setText("Usuario:");
+        eUsuario.setText("DNI:");
 
-        tUsuario.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
+        tDni.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
 
         jLabel2.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
         jLabel2.setText("Contraseña:");
 
         incorrectUser.setFont(new java.awt.Font("Dialog", 2, 14)); // NOI18N
         incorrectUser.setForeground(new java.awt.Color(255, 0, 0));
-        incorrectUser.setText("*Usuario o contraseña incorrecta");
+        incorrectUser.setText("*Las credenciales no corresponden a ningún usuario");
 
         Acceder.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
         Acceder.setText("Acceder");
@@ -80,24 +83,22 @@ public class VIniciarSesion extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(17, 17, 17)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(33, 33, 33)
-                        .addComponent(eUsuario)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(tUsuario))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(incorrectUser)
-                            .addComponent(tPass, javax.swing.GroupLayout.PREFERRED_SIZE, 373, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(Acceder, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 31, Short.MAX_VALUE)
+                        .addGap(31, 31, 31)
                         .addComponent(Registrar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(26, 26, 26)
-                        .addComponent(Salir, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(Salir, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel2)
+                            .addComponent(eUsuario))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(tDni)
+                            .addComponent(incorrectUser)
+                            .addComponent(tPass, javax.swing.GroupLayout.PREFERRED_SIZE, 373, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap(31, Short.MAX_VALUE))
             .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
@@ -109,7 +110,7 @@ public class VIniciarSesion extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(eUsuario)
-                    .addComponent(tUsuario))
+                    .addComponent(tDni))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
@@ -129,12 +130,22 @@ public class VIniciarSesion extends javax.swing.JFrame {
 
     private void AccederActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AccederActionPerformed
         incorrectUser.setVisible(false);
-        Usuario usu = new Usuario(tUsuario.getText(),tPass.getText());
-//        if(Main.iniciarSesion(usu)){
-//            Main.entrarALaAplicacion(); 
-//        }else{
-//            incorrectUser.setVisible(true);
-//        }
+        try{
+            String dni = tDni.getText().trim();
+            String pass = EncriptacionUtil.encriptarString(tPass.getText().trim());
+            Usuario usu = new Usuario(dni,pass);
+            usu.setNuevo(false);
+            Response respuesta = Main.iniciarSesion(usu);
+            if(respuesta.isCorrecto()){
+                JOptionPane.showMessageDialog(this, "Usted ha iniciado sesión");
+                Main.abrirBanco();
+            }else{
+                incorrectUser.setText(respuesta.getMensajeError());
+            }
+        }catch(Exception ex){
+            System.out.println(ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Ha ocurrido un error al iniciar sesión", "", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_AccederActionPerformed
 
     private void RegistrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RegistrarActionPerformed
@@ -171,7 +182,7 @@ public class VIniciarSesion extends javax.swing.JFrame {
     }
     
     public void setUsuario(String usuario){
-        tUsuario.setText(usuario);
+        tDni.setText(usuario);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -182,7 +193,7 @@ public class VIniciarSesion extends javax.swing.JFrame {
     private javax.swing.JLabel incorrectUser;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JTextField tDni;
     private javax.swing.JPasswordField tPass;
-    private javax.swing.JTextField tUsuario;
     // End of variables declaration//GEN-END:variables
 }
