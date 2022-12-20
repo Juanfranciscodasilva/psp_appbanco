@@ -131,7 +131,7 @@ public class Main {
     
     public static Response solicitarSaldo(String cuenta){
         try{
-            Accion accion = Accion.accionSaldo(cuenta);
+            Accion accion = AccionUtil.crearAccionSaldo(cuenta);
             byte[] accionCifrada = AccionUtil.cifrarAccion(cifrador, accion);
             flujoOutput.writeObject(accionCifrada);
             return recibirRespuesta();
@@ -164,6 +164,7 @@ public class Main {
         vCargando = new VCargando("Registrando...");
         vCargando.setVisible(true);
         try{
+            System.out.println(u.getPassword());
             byte[] usuarioCifrado = UsuarioUtil.cifrarUsuario(cifrador, u);
             flujoOutput.writeObject(usuarioCifrado);
             FirmaUtil.FirmarCertificado(flujoInput);

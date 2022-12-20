@@ -142,7 +142,7 @@ public class VSeleccionAccion extends javax.swing.JFrame {
 
     public String solicitarNumeroCuenta(){
         String numeroCuenta = JOptionPane.showInputDialog(null, "Indique su número de cuenta por favor");
-        while(numeroCuenta != null && numeroCuenta.length() != 12 && !isNumeric(numeroCuenta)){
+        while(numeroCuenta != null && (numeroCuenta.length() != 12 || !isNumeric(numeroCuenta))){
             numeroCuenta = JOptionPane.showInputDialog(null, "El número de cuenta indicado no corresponde con el formato del banco. Por favor indique un número de cuenta correcto");
         }
         return numeroCuenta;
@@ -150,7 +150,7 @@ public class VSeleccionAccion extends javax.swing.JFrame {
     
     public boolean isNumeric(String cadena){
         try{
-            Integer.parseInt(cadena.trim());
+            Long.parseLong(cadena);
             return true;
         }catch(Exception ex){
             return false;

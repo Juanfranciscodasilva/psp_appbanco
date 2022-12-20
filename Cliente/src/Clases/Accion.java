@@ -46,11 +46,4 @@ public class Accion implements Serializable {
     public void setImporte(int importe) {
         this.importe = importe;
     }
-    
-    public static Accion accionSaldo(String cuenta){
-        Accion accion = new Accion();
-        accion.setAccion("saldo");
-        accion.setCuentaBancaria(cuenta);
-        return accion;
-    }
 }

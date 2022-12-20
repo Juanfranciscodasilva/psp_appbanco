@@ -120,7 +120,9 @@ public class Hilo extends Thread {
         try{
             byte[] accionRecibida = new byte[]{};
             Accion accion = null;
+            boolean salir = false;
             do{
+                System.out.println("Esperando acciones");
                 try {
                     accionRecibida = (byte[]) flujoInput.readObject();
                 } catch (ClassNotFoundException ex) {
@@ -139,9 +141,11 @@ public class Hilo extends Thread {
                     respuesta = realizarAccionRetirar(accion);
                 }else if (accion.getAccion().equalsIgnoreCase("ingresar")) {
                     respuesta = realizarAccionIngresar(accion);
+                    salir = true;
                 }
+                System.out.println("Se ha enviado una respuesta");
                 enviarRespuesta(respuesta);
-            }while(accion != null && accion.getAccion().equalsIgnoreCase("salir"));
+            }while(!salir);
         }catch(Exception ex){
             System.out.println(ex.getMessage());
             Response respuesta = new Response();
@@ -201,6 +205,7 @@ public class Hilo extends Thread {
         try {
             Usuario usuario = null;
             byte[] usuarioRecibido = new byte[]{};
+            boolean registro = false;
             do {
                 try {
                     usuarioRecibido = (byte[]) flujoInput.readObject();
@@ -215,11 +220,12 @@ public class Hilo extends Thread {
                 if(usuario.isNuevo()){
                     firmarCertificado(flujoOutput);
                     respuesta = crearUsuario(usuario);
+                    registro = true;
                 }else{
                     respuesta = comprobarInicio(usuario);
                 }
                 enviarRespuesta(respuesta);
-            }while(usuario != null && usuario.isNuevo());
+            }while(registro);
         }catch(Exception ex){
             System.out.println(ex.getMessage());
             Response respuesta = new Response();
@@ -260,7 +266,7 @@ public class Hilo extends Thread {
             respuesta.setCorrecto(false);
             respuesta.setMensajeError("El usuario con DNI: "+usu.getDni().toUpperCase()+" ya está registrado");
         }
-        return new Response();
+        return respuesta;
     }
 
     private String generarNumeroCuentaBancaria(){

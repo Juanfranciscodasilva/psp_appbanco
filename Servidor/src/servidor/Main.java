@@ -22,11 +22,31 @@ public class Main {
         ServerSocket serverSocket = new ServerSocket(PORT);
         Socket socket = new Socket();
 
+        //inserta un usuario pre-cargado para evitar la parte del registro
+        insertarDatosEjemplo();
         while (true) {
             socket = serverSocket.accept();
             Hilo hilo = new Hilo(socket,usuarios,cuentasBancarias);
             hilo.start();
         }
+    }
+
+    public static void insertarDatosEjemplo(){
+        Usuario usu = new Usuario();
+        usu.setDni("58046446N");
+        //password 12345Abcde%
+        usu.setPassword("qqca8eKud9v/L7WPkZAdv9VvfiMs1sLzoTHyouFlT9c=");
+        usu.setNombre("Juan Francisco");
+        usu.setApellidos("Da Silva García");
+        usu.setEmail("juanfrancisco.dasilva@ikasle.egibide.org");
+        usu.setEdad(21);
+        usu.setNuevo(false);
+        usuarios.add(usu);
+        CuentaBancaria cuenta = new CuentaBancaria();;
+        cuenta.setNumeroCuenta("000000000000");
+        cuenta.setSaldo(100);
+        cuenta.setDniPropietario(usu.getDni());
+        cuentasBancarias.add(cuenta);
     }
     
 }
