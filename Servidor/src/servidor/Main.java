@@ -47,6 +47,22 @@ public class Main {
         cuenta.setSaldo(100);
         cuenta.setDniPropietario(usu.getDni());
         cuentasBancarias.add(cuenta);
+
+        Usuario usu2 = new Usuario();
+        usu.setDni("58046447J");
+        //password 12345Abcde%
+        usu.setPassword("qqca8eKud9v/L7WPkZAdv9VvfiMs1sLzoTHyouFlT9c=");
+        usu.setNombre("Test");
+        usu.setApellidos("test");
+        usu.setEmail("test@gmail.com");
+        usu.setEdad(21);
+        usu.setNuevo(false);
+        usuarios.add(usu2);
+        CuentaBancaria cuenta2 = new CuentaBancaria();;
+        cuenta.setNumeroCuenta("000000000001");
+        cuenta.setSaldo(100);
+        cuenta.setDniPropietario(usu2.getDni());
+        cuentasBancarias.add(cuenta2);
     }
     
 }

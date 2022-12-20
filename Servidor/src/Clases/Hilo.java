@@ -1,6 +1,7 @@
 package Clases;
 
 import Utils.ResponseUtil;
+import Utils.UsuarioUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -191,13 +192,63 @@ public class Hilo extends Thread {
     }
 
     private Response realizarAccionTransferencia(Accion accion){
-        return new Response();
+        Response respuesta = new Response();
+        try{
+            CuentaBancaria cta = comprobarCuentaDelUsuario(accion.getCuentaBancaria());
+            if(cta == null){
+                respuesta.setCorrecto(false);
+                respuesta.setMensajeError("La cuenta con número: '"+accion.getCuentaBancaria()+"' no es la correspondiente a su persona, por favor indique su número de cuenta.");
+                return respuesta;
+            }
+            int saldoActual = cta.getSaldo();
+            if(saldoActual < accion.getImporte()){
+                respuesta.setCorrecto(false);
+                respuesta.setMensajeError("Saldo insuficiente.");
+                return respuesta;
+            }
+            CuentaBancaria ctaDestino = this.ListaCuentasBancarias.stream()
+                    .filter(c -> c.getNumeroCuenta().equalsIgnoreCase(accion.getCuentaBancaria2()))
+                    .findFirst()
+                    .orElse(null);
+
+            if(ctaDestino == null){
+                respuesta.setCorrecto(false);
+                respuesta.setMensajeError("No se ha encontrado un destinatario con número de cuenta: "+accion.getCuentaBancaria2());
+                return respuesta;
+            }
+            cta.setSaldo(saldoActual-accion.getImporte());
+            ctaDestino.setSaldo(ctaDestino.getSaldo()+accion.getImporte());
+            return respuesta;
+        }catch (Exception ex){
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Ha ocurrido un error al realizar la transferencia");
+            return respuesta;
+        }
     }
 
     private Response realizarAccionRetirar(Accion accion){
-        return new Response();
+        Response respuesta = new Response();
+        try{
+            CuentaBancaria cta = comprobarCuentaDelUsuario(accion.getCuentaBancaria());
+            if(cta == null){
+                respuesta.setCorrecto(false);
+                respuesta.setMensajeError("La cuenta con número: '"+accion.getCuentaBancaria()+"' no es la correspondiente a su persona, por favor indique su número de cuenta.");
+                return respuesta;
+            }
+            int saldoActual = cta.getSaldo();
+            if(saldoActual < accion.getImporte()){
+                respuesta.setCorrecto(false);
+                respuesta.setMensajeError("Saldo insuficiente.");
+                return respuesta;
+            }
+            cta.setSaldo(saldoActual-accion.getImporte());
+            return respuesta;
+        }catch (Exception ex){
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Ha ocurrido un error al retirar dinero");
+            return respuesta;
+        }
     }
-
     private Response realizarAccionIngresar(Accion accion){
         Response respuesta = new Response();
         try{
@@ -217,43 +268,44 @@ public class Hilo extends Thread {
     }
 
     private void recibirUsuario() throws Exception{
-        try {
-            Usuario usuario = null;
-            byte[] usuarioRecibido = new byte[]{};
-            boolean registro = false;
-            do {
-                try {
-                    usuarioRecibido = (byte[]) flujoInput.readObject();
-                } catch (ClassNotFoundException ex) {
-                    System.out.println(ex.getMessage());
-                }
-                byte[] usuarioRecibidoDescifrado = desCipher.doFinal(usuarioRecibido);
-                ByteArrayInputStream byteInput = new ByteArrayInputStream(usuarioRecibidoDescifrado);
-                ObjectInputStream objectInput = new ObjectInputStream(byteInput);
-                usuario = (Usuario)objectInput.readObject();
+        boolean registro = false;
+        do {
+            try {
+                Usuario usuario = null;
+                byte[] usuarioRecibido = new byte[]{};
+                    try {
+                        usuarioRecibido = (byte[]) flujoInput.readObject();
+                    } catch (ClassNotFoundException ex) {
+                        System.out.println(ex.getMessage());
+                    }
+                    byte[] usuarioRecibidoDescifrado = desCipher.doFinal(usuarioRecibido);
+                    ByteArrayInputStream byteInput = new ByteArrayInputStream(usuarioRecibidoDescifrado);
+                    ObjectInputStream objectInput = new ObjectInputStream(byteInput);
+                    usuario = (Usuario)objectInput.readObject();
+                    Response respuesta = new Response();
+                    if(usuario.isNuevo()){
+                        firmarCertificado(flujoOutput);
+                        respuesta = crearUsuario(usuario);
+                        registro = true;
+                    }else{
+                        respuesta = comprobarInicio(usuario);
+                    }
+                    enviarRespuesta(respuesta);
+
+            }catch(Exception ex){
+                System.out.println(ex.getMessage());
                 Response respuesta = new Response();
-                if(usuario.isNuevo()){
-                    firmarCertificado(flujoOutput);
-                    respuesta = crearUsuario(usuario);
-                    registro = true;
-                }else{
-                    respuesta = comprobarInicio(usuario);
-                }
+                respuesta.setCorrecto(false);
+                respuesta.setMensajeError("Ha ocurrido un error inesperado");
                 enviarRespuesta(respuesta);
-            }while(registro);
-        }catch(Exception ex){
-            System.out.println(ex.getMessage());
-            Response respuesta = new Response();
-            respuesta.setCorrecto(false);
-            respuesta.setMensajeError("Ha ocurrido un error inesperado");
-            enviarRespuesta(respuesta);
-        }
+            }
+        }while(registro);
     }
 
-    private Response comprobarInicio(Usuario usu){
+    private Response comprobarInicio(Usuario usua){
         Response respuesta = new Response();
         Usuario encontrado = this.ListaUsuarios.stream()
-                .filter(u -> u.getDni().equalsIgnoreCase(usu.getDni()) && u.getPassword().equals(usu.getPassword()))
+                .filter(u -> u.getDni().equalsIgnoreCase(usua.getDni()) && u.getPassword().equals(usua.getPassword()))
                 .findFirst()
                 .orElse(null);
         if(encontrado == null){
@@ -261,6 +313,7 @@ public class Hilo extends Thread {
             respuesta.setMensajeError("Las credenciales no corresponden a ningún usuario.");
         }else{
             usuarioSesion = encontrado;
+            respuesta.setMensajeCorrecto(UsuarioUtils.nombreCompleto(encontrado));
         }
         return respuesta;
     }

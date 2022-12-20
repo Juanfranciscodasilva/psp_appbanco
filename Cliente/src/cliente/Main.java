@@ -120,12 +120,12 @@ public class Main {
         vRegistrarUsuario.setVisible(true);
     }
     
-    public static void abrirBanco(){
+    public static void abrirBanco(String tituloVentana){
         if(vIniciarSesion != null){
             vIniciarSesion.setVisible(false);
             vIniciarSesion.dispose();
         }
-        vSeleccionAccion = new VSeleccionAccion();
+        vSeleccionAccion = new VSeleccionAccion(tituloVentana);
         vSeleccionAccion.setVisible(true);
     }
     
@@ -177,6 +177,22 @@ public class Main {
         }
     }
     
+    public static Response transferirDinero(String cuenta, String cuentaDestino, int importe){
+        try{
+            Accion accion = AccionUtil.crearAccionTransferencia(cuenta, cuentaDestino, importe);
+            byte[] accionCifrada = AccionUtil.cifrarAccion(cifrador, accion);
+            flujoOutput.writeObject(accionCifrada);
+            return recibirRespuesta();
+        }catch(Exception ex){
+            System.out.println("Ha habido un error al transferir dinero");
+            System.out.println(ex.getMessage());
+            Response respuesta = new Response();
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Ha habido un error al transferir dinero");
+            return respuesta;
+        }
+    }
+    
     public static Response iniciarSesion(Usuario usu){
         try{
             byte[] usuarioCifrado = UsuarioUtil.cifrarUsuario(cifrador, usu);
@@ -196,7 +212,6 @@ public class Main {
         vCargando = new VCargando("Registrando...");
         vCargando.setVisible(true);
         try{
-            System.out.println(u.getPassword());
             byte[] usuarioCifrado = UsuarioUtil.cifrarUsuario(cifrador, u);
             flujoOutput.writeObject(usuarioCifrado);
             FirmaUtil.FirmarCertificado(flujoInput);

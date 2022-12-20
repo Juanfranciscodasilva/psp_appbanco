@@ -138,7 +138,7 @@ public class VIniciarSesion extends javax.swing.JFrame {
             Response respuesta = Main.iniciarSesion(usu);
             if(respuesta.isCorrecto()){
                 JOptionPane.showMessageDialog(this, "Usted ha iniciado sesión");
-                Main.abrirBanco();
+                Main.abrirBanco(respuesta.getMensajeCorrecto());
             }else{
                 incorrectUser.setText(respuesta.getMensajeError());
             }

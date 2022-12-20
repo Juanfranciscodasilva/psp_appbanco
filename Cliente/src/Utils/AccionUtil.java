@@ -45,7 +45,7 @@ public class AccionUtil {
         return accion;
     }
     
-    public static Accion crearAccionTransferencia(String cuentaEmisor, int importe, String cuentaDestino){
+    public static Accion crearAccionTransferencia(String cuentaEmisor, String cuentaDestino, int importe ){
         Accion accion = new Accion();
         accion.setAccion("transferencia");
         accion.setCuentaBancaria(cuentaEmisor);
