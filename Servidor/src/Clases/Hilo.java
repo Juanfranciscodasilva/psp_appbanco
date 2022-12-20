@@ -141,6 +141,7 @@ public class Hilo extends Thread {
                     respuesta = realizarAccionRetirar(accion);
                 }else if (accion.getAccion().equalsIgnoreCase("ingresar")) {
                     respuesta = realizarAccionIngresar(accion);
+                }else if(accion.getAccion().equalsIgnoreCase("salir")){
                     salir = true;
                 }
                 System.out.println("Se ha enviado una respuesta");
@@ -198,7 +199,21 @@ public class Hilo extends Thread {
     }
 
     private Response realizarAccionIngresar(Accion accion){
-        return new Response();
+        Response respuesta = new Response();
+        try{
+            CuentaBancaria cta = comprobarCuentaDelUsuario(accion.getCuentaBancaria());
+            if(cta == null){
+                respuesta.setCorrecto(false);
+                respuesta.setMensajeError("La cuenta con número: '"+accion.getCuentaBancaria()+"' no es la correspondiente a su persona, por favor indique su número de cuenta.");
+                return respuesta;
+            }
+            cta.setSaldo(cta.getSaldo()+accion.getImporte());
+            return respuesta;
+        }catch (Exception ex){
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Ha ocurrido un error al ingresar dinero");
+            return respuesta;
+        }
     }
 
     private void recibirUsuario() throws Exception{

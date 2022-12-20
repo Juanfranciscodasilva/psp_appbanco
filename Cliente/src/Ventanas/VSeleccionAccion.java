@@ -121,7 +121,8 @@ public class VSeleccionAccion extends javax.swing.JFrame {
                 }else{
                     JOptionPane.showMessageDialog(this, respuesta.getMensajeError(), "", JOptionPane.ERROR_MESSAGE);
                 }
-                
+            }else{
+                JOptionPane.showMessageDialog(this, "Se ha cancelado la acción.");
             }
         }catch(Exception ex){
             JOptionPane.showMessageDialog(null, "Ha ocurrido un error al solicitar el saldo. Por favor intentelo de nuevo.", "", JOptionPane.ERROR_MESSAGE);
@@ -133,11 +134,45 @@ public class VSeleccionAccion extends javax.swing.JFrame {
     }//GEN-LAST:event_btTransferenciaActionPerformed
 
     private void btRetirarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btRetirarActionPerformed
-        
+        try{
+            String cuenta = solicitarNumeroCuenta();
+            if(cuenta != null){
+                int importe = solicitarImporte();
+                if(importe != -1){
+                    Response respuesta = Main.retirarDinero(cuenta,importe);
+                    if(respuesta.isCorrecto()){
+                        JOptionPane.showMessageDialog(null, "Se ha retirado: "+importe+"€.");
+                    }else{
+                        JOptionPane.showMessageDialog(this, respuesta.getMensajeError(), "", JOptionPane.ERROR_MESSAGE);
+                    }
+                }else{
+                    JOptionPane.showMessageDialog(this, "Se ha cancelado la acción.");
+                }
+            }
+        }catch(Exception ex){
+            JOptionPane.showMessageDialog(null, "Ha ocurrido un error al retirar dinero. Por favor intentelo de nuevo.", "", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btRetirarActionPerformed
 
     private void btIngresarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btIngresarActionPerformed
-        
+        try{
+            String cuenta = solicitarNumeroCuenta();
+            if(cuenta != null){
+                int importe = solicitarImporte();
+                if(importe != -1){
+                    Response respuesta = Main.ingresarDinero(cuenta,importe);
+                    if(respuesta.isCorrecto()){
+                        JOptionPane.showMessageDialog(null, "Se han ingresado "+importe+"€.");
+                    }else{
+                        JOptionPane.showMessageDialog(this, respuesta.getMensajeError(), "", JOptionPane.ERROR_MESSAGE);
+                    }
+                }else{
+                    JOptionPane.showMessageDialog(this, "Se ha cancelado la acción.");
+                }
+            }
+        }catch(Exception ex){
+            JOptionPane.showMessageDialog(null, "Ha ocurrido un error al ingresar dinero. Por favor intentelo de nuevo.", "", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btIngresarActionPerformed
 
     public String solicitarNumeroCuenta(){
@@ -146,6 +181,30 @@ public class VSeleccionAccion extends javax.swing.JFrame {
             numeroCuenta = JOptionPane.showInputDialog(null, "El número de cuenta indicado no corresponde con el formato del banco. Por favor indique un número de cuenta correcto");
         }
         return numeroCuenta;
+    }
+    
+    public int solicitarImporte(){
+        boolean valido = false;
+        int numero = -1;
+        String mensaje = "Indique el importe";
+        do{
+            numero = -1;
+            String importeString = JOptionPane.showInputDialog(null, mensaje);
+            if(importeString != null){
+                try{
+                    numero = Integer.parseInt(importeString);
+                    if(numero > 0){
+                        valido = true;
+                    }
+                }catch(Exception ex){
+                    mensaje = "Indique un importe válido";
+                }
+            }else{
+                valido = true;
+            }
+        }while(!valido);
+        
+        return numero;
     }
     
     public boolean isNumeric(String cadena){

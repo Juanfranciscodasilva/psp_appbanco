@@ -145,6 +145,38 @@ public class Main {
         }
     }
     
+    public static Response ingresarDinero(String cuenta, int importe){
+        try{
+            Accion accion = AccionUtil.crearAccionIngresar(cuenta, importe);
+            byte[] accionCifrada = AccionUtil.cifrarAccion(cifrador, accion);
+            flujoOutput.writeObject(accionCifrada);
+            return recibirRespuesta();
+        }catch(Exception ex){
+            System.out.println("Ha habido un error al ingresar dinero");
+            System.out.println(ex.getMessage());
+            Response respuesta = new Response();
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Ha habido un error al ingresar dinero");
+            return respuesta;
+        }
+    }
+    
+    public static Response retirarDinero(String cuenta, int importe){
+        try{
+            Accion accion = AccionUtil.crearAccionRetirar(cuenta, importe);
+            byte[] accionCifrada = AccionUtil.cifrarAccion(cifrador, accion);
+            flujoOutput.writeObject(accionCifrada);
+            return recibirRespuesta();
+        }catch(Exception ex){
+            System.out.println("Ha habido un error al retirar dinero");
+            System.out.println(ex.getMessage());
+            Response respuesta = new Response();
+            respuesta.setCorrecto(false);
+            respuesta.setMensajeError("Ha habido un error al retirar dinero");
+            return respuesta;
+        }
+    }
+    
     public static Response iniciarSesion(Usuario usu){
         try{
             byte[] usuarioCifrado = UsuarioUtil.cifrarUsuario(cifrador, usu);
