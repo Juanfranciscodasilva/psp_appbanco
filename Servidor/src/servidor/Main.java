@@ -49,19 +49,19 @@ public class Main {
         cuentasBancarias.add(cuenta);
 
         Usuario usu2 = new Usuario();
-        usu.setDni("58046447J");
+        usu2.setDni("58046447J");
         //password 12345Abcde%
-        usu.setPassword("qqca8eKud9v/L7WPkZAdv9VvfiMs1sLzoTHyouFlT9c=");
-        usu.setNombre("Test");
-        usu.setApellidos("test");
-        usu.setEmail("test@gmail.com");
-        usu.setEdad(21);
-        usu.setNuevo(false);
+        usu2.setPassword("qqca8eKud9v/L7WPkZAdv9VvfiMs1sLzoTHyouFlT9c=");
+        usu2.setNombre("Test");
+        usu2.setApellidos("test");
+        usu2.setEmail("test@gmail.com");
+        usu2.setEdad(21);
+        usu2.setNuevo(false);
         usuarios.add(usu2);
         CuentaBancaria cuenta2 = new CuentaBancaria();;
-        cuenta.setNumeroCuenta("000000000001");
-        cuenta.setSaldo(100);
-        cuenta.setDniPropietario(usu2.getDni());
+        cuenta2.setNumeroCuenta("000000000001");
+        cuenta2.setSaldo(100);
+        cuenta2.setDniPropietario(usu2.getDni());
         cuentasBancarias.add(cuenta2);
     }
     
