@@ -289,6 +289,7 @@ public class Hilo extends Thread {
                         registro = true;
                     }else{
                         respuesta = comprobarInicio(usuario);
+                        registro = false;
                     }
                     enviarRespuesta(respuesta);
 
